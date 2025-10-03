@@ -1,0 +1,228 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Mini E‑commerce — Demo</title>
+  <style>
+    :root{--accent:#0ea5a4;--bg:#f6f7fb;--card:#ffffff;--muted:#6b7280}
+    *{box-sizing:border-box}
+    body{font-family:Inter,system-ui,Segoe UI,Roboto,Arial;line-height:1.4;margin:0;background:var(--bg);color:#111}
+    header{background:linear-gradient(90deg,#0ea5a4 0%, #06b6d4 100%);color:#fff;padding:18px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .logo{font-weight:700;font-size:18px}
+    .nav-buttons button{background:transparent;border:1px solid rgba(255,255,255,0.18);color:#fff;padding:8px 12px;border-radius:8px;margin-left:8px;cursor:pointer}
+    .container{max-width:1100px;margin:26px auto;padding:0 18px}
+    .hero{display:flex;gap:20px;align-items:center;margin-bottom:18px}
+    .hero .title{font-size:24px;font-weight:700}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+    .card{background:var(--card);border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(12,12,12,0.06);display:flex;flex-direction:column;gap:10px}
+    .thumb{height:160px;border-radius:8px;background:linear-gradient(135deg,#eef2ff,#fff);display:flex;align-items:center;justify-content:center;color:var(--muted);font-weight:600}
+    .price-row{display:flex;justify-content:space-between;align-items:center}
+    .price{font-weight:700}
+    .btn{border:0;padding:10px 12px;border-radius:10px;cursor:pointer}
+    .btn-primary{background:var(--accent);color:#fff}
+    .btn-outline{background:transparent;border:1px solid #e6e9ef;color:#111}
+    .cart{position:fixed;right:18px;bottom:18px;background:var(--card);padding:12px;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,0.12);width:320px;max-height:70vh;overflow:auto}
+    .cart h4{margin:0 0 8px 0}
+    .cart-item{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-top:1px solid #f0f2f5}
+    .muted{color:var(--muted)}
+    form.contact{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 18px rgba(12,12,12,0.04);margin-top:18px}
+    label{display:block;font-size:13px;margin-bottom:6px;color:#111}
+    input,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #e6e9ef;font-size:14px}
+    textarea{min-height:100px}
+    footer{margin-top:30px;text-align:center;color:var(--muted);padding:24px 0}
+    @media (max-width:600px){.hero{flex-direction:column;align-items:flex-start}.cart{width:92%;left:4%;right:4%}}
+  </style>
+</head>
+<body>
+  <header>
+    <div class="logo">ShopSimple</div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div class="nav-buttons">
+        <button onclick="scrollToProducts()">Products</button>
+        <button onclick="scrollToContact()">Contact</button>
+        <button id="openCartBtn" onclick="toggleCart()">Cart (<span id="cartCount">0</span>)</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="container">
+    <section class="hero">
+      <div>
+        <div class="title">Mini E‑commerce demo — clean and simple</div>
+        <div class="muted">Add items to cart, view cart, fill contact form. This is a single‑file demo to get you started.</div>
+      </div>
+      <div style="margin-left:auto;display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="sortByPrice()">Sort by price</button>
+        <button class="btn btn-primary" onclick="clearCart()">Clear cart</button>
+      </div>
+    </section>
+
+    <section id="products">
+      <h3 style="margin:4px 0 12px 0">Products</h3>
+      <div class="grid" id="productGrid">
+        <!-- Products injected by JS -->
+      </div>
+    </section>
+
+    <section style="margin-top:18px">
+      <h3>Contact Us</h3>
+      <form id="contactForm" class="contact" onsubmit="submitContact(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label for="name">Name</label>
+            <input id="name" name="name" required />
+          </div>
+          <div>
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required />
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" required></textarea>
+        </div>
+        <div style="margin-top:12px;display:flex;gap:8px">
+          <button type="submit" class="btn btn-primary">Send message</button>
+          <button type="button" class="btn btn-outline" onclick="document.getElementById('contactForm').reset()">Reset</button>
+        </div>
+        <p class="muted" id="contactStatus" style="margin-top:8px"></p>
+      </form>
+    </section>
+
+    <footer>
+      © <span id="year"></span> ShopSimple — Demo site. Not for production use.
+    </footer>
+  </main>
+
+  <aside id="cartPanel" class="cart" style="display:none">
+    <h4>Your Cart</h4>
+    <div id="cartList"><p class="muted">Cart is empty</p></div>
+    <div style="margin-top:12px;display:flex;justify-content:space-between;align-items:center">
+      <div>
+        <div class="muted">Total</div>
+        <div style="font-weight:700" id="cartTotal">₹0.00</div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-outline" onclick="checkout()">Checkout</button>
+        <button class="btn btn-primary" onclick="toggleCart()">Close</button>
+      </div>
+    </div>
+  </aside>
+
+  <script>
+    // Demo product data
+    const products = [
+      {id:1,title:'Classic Sneakers',price:2499,desc:'Comfortable everyday sneakers.'},
+      {id:2,title:'Canvas Backpack',price:1999,desc:'Durable, spacious backpack.'},
+      {id:3,title:'Leather Wallet',price:799,desc:'Slim leather wallet with card slots.'},
+      {id:4,title:'Wireless Earbuds',price:1799,desc:'Compact earbuds with good sound.'},
+      {id:5,title:'Sunglasses',price:1199,desc:'UV protection with modern frame.'},
+      {id:6,title:'Travel Mug',price:599,desc:'Stainless steel mug, keeps drinks hot.'}
+    ];
+
+    // Cart state
+    let cart = {};
+
+    function money(v){return '₹'+(v).toFixed(2)}
+
+    function renderProducts(list){
+      const grid = document.getElementById('productGrid');
+      grid.innerHTML = '';
+      list.forEach(p=>{
+        const el = document.createElement('div'); el.className='card';
+        el.innerHTML = `
+          <div class="thumb">Image — ${p.title}</div>
+          <div style="font-weight:700">${p.title}</div>
+          <div class="muted" style="font-size:13px">${p.desc}</div>
+          <div class="price-row">
+            <div class="price">${money(p.price)}</div>
+            <div style="display:flex;gap:8px">
+              <button class="btn btn-outline" onclick="addToCart(${p.id})">Add to cart</button>
+              <button class="btn btn-primary" onclick="buyNow(${p.id})">Buy now</button>
+            </div>
+          </div>
+        `;
+        grid.appendChild(el);
+      })
+    }
+
+    function addToCart(id){
+      const p = products.find(x=>x.id===id); if(!p) return;
+      if(cart[id]) cart[id].qty += 1; else cart[id]={...p,qty:1};
+      updateCartUI();
+    }
+
+    function buyNow(id){
+      addToCart(id); toggleCart(); // open cart and let user checkout
+    }
+
+    function updateCartUI(){
+      const list = document.getElementById('cartList');
+      const count = Object.values(cart).reduce((s,i)=>s+i.qty,0);
+      document.getElementById('cartCount').textContent = count;
+      if(count===0){ list.innerHTML='<p class="muted">Cart is empty</p>'; document.getElementById('cartTotal').textContent = money(0); return; }
+      list.innerHTML='';
+      let total = 0;
+      Object.values(cart).forEach(item=>{
+        total += item.price * item.qty;
+        const row = document.createElement('div'); row.className='cart-item';
+        row.innerHTML = `
+          <div style="flex:1">
+            <div style="font-weight:700">${item.title}</div>
+            <div class="muted" style="font-size:13px">${money(item.price)} × ${item.qty}</div>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;margin-left:8px">
+            <button class="btn" onclick="changeQty(${item.id},1)">+</button>
+            <button class="btn" onclick="changeQty(${item.id},-1)">−</button>
+          </div>
+        `;
+        list.appendChild(row);
+      })
+      document.getElementById('cartTotal').textContent = money(total);
+    }
+
+    function changeQty(id,delta){
+      if(!cart[id]) return; cart[id].qty += delta; if(cart[id].qty<=0) delete cart[id]; updateCartUI();
+    }
+
+    function toggleCart(){
+      const panel = document.getElementById('cartPanel'); panel.style.display = (panel.style.display==='none'?'block':'none');
+    }
+
+    function clearCart(){ cart = {}; updateCartUI(); }
+
+    function checkout(){
+      if(Object.keys(cart).length===0){ alert('Cart empty — add items first'); return; }
+      // Demo checkout flow
+      const items = Object.values(cart).map(i=>`${i.title} x ${i.qty}`).join('\n');
+      alert('Checkout (demo) — you ordered:\n' + items + '\n\nThank you!');
+      clearCart(); toggleCart();
+    }
+
+    function submitContact(e){
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      const message = document.getElementById('message').value.trim();
+      if(!name||!email||!message) return;
+      // Simulate sending
+      document.getElementById('contactStatus').textContent = 'Sending...';
+      setTimeout(()=>{
+        document.getElementById('contactStatus').textContent = 'Message sent — we will reply to ' + email + '.';
+        document.getElementById('contactForm').reset();
+      },900);
+    }
+
+    function scrollToProducts(){ document.getElementById('products').scrollIntoView({behavior:'smooth'}); }
+    function scrollToContact(){ document.getElementById('contactForm').scrollIntoView({behavior:'smooth'}); }
+
+    function sortByPrice(){ products.sort((a,b)=>a.price-b.price); renderProducts(products); }
+
+    // initialize
+    document.getElementById('year').textContent = new Date().getFullYear();
+    renderProducts(products);
+    updateCartUI();
+  </script>
+</body>
+</html>
